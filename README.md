@@ -1,16 +1,16 @@
-# Pico-100BASE-TX - Bit banged 100 MBit/s Ethernet
+# Pico-100BASE-TX - Bit-banged 100 MBit/s Ethernet
 
-This library allows to stream out data with around 11 Mbyte/s from a RP2040 or RP2350 MCU using the PIO to bit-bang a 100 Mbit Fast Ethernet connection.
-It is somewhat similar to [Pico-10BASE-T](https://github.com/kingyoPiyo/Pico-10BASE-T), which implemented TX-only 10 MBit Ethernet.
+This library allows to stream out data with around 11 MByte/s from a RP2040 or RP2350 MCU using the PIO to bit-bang a 100 MBit/s Fast Ethernet connection.
+It is somewhat similar to [Pico-10BASE-T](https://github.com/kingyoPiyo/Pico-10BASE-T), which implemented TX-only 10 MBit/s Ethernet.
 
 **Warning: Do not connect to any POE capable equipment!**
 
-Ideally use a pulse transformer with proper matching circuitry. In my experiments I directly connected the two GPIOs to an old ethernet cable and it worked with all devices I've tested - only do that at your **own risk**. You also could use some old Ethernet switch and connect it in between the Pico and your machine to be safe.
+Ideally use a pulse transformer with proper matching circuitry, or at least the 47 + 470 Ohms resistors as seen [here](https://github.com/kingyoPiyo/Pico-10BASE-T?tab=readme-ov-file#setup). In my experiments I directly connected the two GPIOs to an old ethernet cable and it worked with most devices I've tested - only do that at your **own risk**. You also could use some old Ethernet switch and connect it in between the Pico and your machine to be safe.
+ASUS mainboards with LANGuard only work when using the resistors or a pulse transformer.
 
 Demo digitizing some WBFM IF signal with the internal ADC and streaming it out via Fast Ethernet:
 
 https://github.com/user-attachments/assets/e150bc89-122c-4669-ae62-b9b03f8b2769
-
 
 ## How does it work?
 
@@ -30,6 +30,10 @@ The scrambler is implemented using an [LFSR](https://en.wikipedia.org/wiki/Linea
 
 Each 4-bit nibble is encoded using the [4B5B](https://en.wikipedia.org/wiki/4B5B) line code resulting in 5 bits. Special 5-bit symbols J, K as well as T and R are reserved to signal the start and end of an Ethernet frame, furthermore there is an idle symbol consisting of all ones.
 For efficiency purposes, we use a LUT with 256 entries, containing two 4B5B symbols per entry. This allows to encode each byte of the Ethernet frame with only one access into the table.
+
+### Checksum calculation
+
+The Ethernet FCS (Frame Check Sequence) is calculated by using the DMA CRC sniffer in CRC32 mode, the (optional) UDP checksum also uses the DMA sniffer in sum mode.
 
 ### Additional notes
 
